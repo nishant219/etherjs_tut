@@ -1,0 +1,12 @@
+
+//abi -- representation of smart contract in json fromat
+
+// to read smart contract we need 3 thing address, abi, provider
+
+// network on which your smart contract was deployed and the network with which you connected with metamask should be same
+
+// while transferring funds we are changing the state of signer so we need signer 
+// transfer fun( to whom--> address,  amount)
+
+//solidity is compiled language & we only deployed bytecode on blockchain not solidity compiled
+//
