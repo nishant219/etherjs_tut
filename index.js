@@ -66,6 +66,59 @@ transfer_erc20();
 
 
 
+//-----------------------------------------------------------------------------
+
+
+//uniswap router address present on etherscan +
+//function is present in the uniswap smart contract which is used in ABI
+
+async function uniswap() {
+  const routerAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+  const uniswapABI = [
+    "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)\
+    external\
+    payable\
+    returns (uint[] memory amounts)",
+  ];
+
+  const uniswapContract = new ethers.Contract(routerAddress, uniswapABI, provider );
+  const uniswapSigner = uniswapContract.connect(Signer);
+  const token = await Fetcher.fetchTokenData( chainId, "0xc3994c5cbddf7ce38b8a2ec2830335fa8f3eea6a", provider );
+  const weth = WETH[chainId];
+  const pair = await Fetcher.fetchPairData(token, weth, provider); //liquidity pool pair
+  const route = new Route([pair], weth);
+
+  const swapAmount = ethers.utils.parseEther("0.001"); 
+  
+  // trade (route, token amount, trade type)
+  const trade = new Trade(route,
+    new TokenAmount(weth, swapAmount),
+  TradeType.EXACT_INPUT
+  ); 
+
+  const slippage = new Percent("10000", "1000");
+  const amountOut = trade.minimumAmountOut(slippage).raw;
+  const amountOutMin = ethers.BigNumber.from(amountOut.toString()).toHexString(); //convert in hex
+  const path = [weth.address, token.address];
+  const deadlineTime = Math.floor(Data.now() / 1000) + 60 * 20;
+  const deadline = ethers.BigNumber.from(deadlineTime.toString()).toHexString();
+  const input = trade.inputAmount.raw;
+  const inputAmount = ethers.BigNumber.from(input.toString()).toHexString();
+
+  //transction fun
+  const transction = await uniswapSigner.swapExactETHForTokens(
+    amountOutMin,
+    path,
+    Account,
+    deadline,
+    { value: inputAmount }
+  );
+  console.log("Swap transction Hash :" , transction.hash);
+  
+}
+uniswap();
+
+
 
 
 
